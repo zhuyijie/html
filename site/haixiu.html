@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <title>豆瓣-请不要害羞组</title>
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content="豆瓣 - 请不要害羞 - douban美女图片分享。">
+    <script>
+      if (location.protocol == 'https:') {
+        location.protocol = 'http:';
+      }
+      var duoshuoQuery = {
+        short_name: 'haixiu'
+      };
+    </script>
+    <link rel="stylesheet" href="http://cdnjscn.b0.upaiyun.com/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css">
+    <style>
+      .thumbnail {
+        width: 330px; 
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175); 
+      }
+      .thumbnail .caption h3 {
+        font-size: 18px;
+      }
+      #progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: #ddd;
+        z-index: -1;
+        transition: height 0.3s;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>豆瓣 - <a href="http://www.douban.com/group/haixiuzu/" target="_blank" rel="nofollow noreferrer">请不要害羞</a></h1>
+    <p>豆瓣最火的美女图片分享小组，镜头绘制的美好瞬间。 </p>
+    <div id="progress"></div>
+    <div id="posts">
+    </div>
+    <script id="post-tpl" type="x-tmpl-mustache">
+      {{#.}}
+        <div class="thumbnail post">
+          {{#imgs}}
+            <img src="{{.}}" alt="{{ title }}">
+          {{/imgs}}
+          <div class="caption">
+            <h3><a href="{{ url }}" target="_blank">{{ title }}</a></h3>
+            <p>by <a href="{{ author_url }}" target="_blank" rel="nofollow noreferer">{{ author }}</a></p>
+            <p>{{ time }}</p>
+          </div>
+        </div>
+      {{/.}}
+    </script>
+    <!-- 请置于所有广告位代码之前 -->
+    <script src="http://cdnjscn.b0.upaiyun.com/libs/mustache.js/0.8.1/mustache.min.js"></script>
+    <script src="http://cdnjscn.b0.upaiyun.com/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="http://cdnjscn.b0.upaiyun.com/libs/twitter-bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="http://cdnjscn.b0.upaiyun.com/libs/masonry/3.1.5/masonry.pkgd.min.js"></script>
+    <script src="http://cdnjscn.b0.upaiyun.com/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.min.js"></script>
+    <script src="http://static.duoshuo.com/embed.unstable.js"></script>
+    <script>
+      var container = $("#posts").masonry({
+        columnWidth: 20
+      });
+      var CUR_PAGE = 1;
+      var isloading = false;
+      var offset_pos;
+
+      function load(page) {
+        isloading = true;
+        DUOSHUO.API.get("threads/listPosts", {
+          thread_key: "haixiu",
+          page: page,
+	  order: "desc",
+          limit: 10
+        }, function(data) {
+          console.log(data);
+          var parsed_data = [];
+          $.each(data.response, function(i, e) {
+            e = data.parentPosts[e];
+            var msg = null;
+            try {
+              msg = JSON.parse(decodeURIComponent(escape(atob(e.message.replace(/<br \/>/g, '').replace(/\s/g, '')))));
+            } catch (error) {
+              console.log(error)
+              try {
+                msg = JSON.parse(e.message);
+              } catch (error) {
+                try {
+                  var msg = JSON.parse($('<textarea />').html(e.message).text())
+                } catch (error) {
+                  console.log(e.message);
+                  return ;
+                }
+              }
+            }
+            msg.time = e.created_at
+            parsed_data.push(msg);
+          });
+
+          if (parsed_data.length == 0) {
+            return;
+          }
+
+          var template = $('#post-tpl').html();
+          Mustache.parse(template);
+          var new_items = $(Mustache.render(template, parsed_data));
+          var imgLoad = imagesLoaded($("<div>").append(new_items))
+          var imgLoaded = 0;
+          imgLoad.on("always", function() {
+            container.append(new_items).masonry('appended', new_items); 
+            $("#progress").hide();
+            isloading = false;
+          });
+          imgLoad.on("progress", function() {
+            imgLoaded++;
+            $("#progress").show().css("height", ""+(imgLoaded/imgLoad.images.length*100)+"%");
+          });
+          offset_pos = new_items[0];
+        });
+      }
+
+      $(window).scroll(function() {
+        if ($(document).scrollTop() + $(window).height() > $(offset_pos).position().top) {
+          if (!isloading) {
+            load(++CUR_PAGE);
+          }
+        }
+      });
+
+      load(CUR_PAGE);
+    </script>
+    <!-- 广告位：代码位测试 
+    <script>
+    (function() {
+        var s = "_" + Math.random().toString(36).slice(2);
+        document.write('<div id="' + s + '"></div>');
+        (window.slotbydup=window.slotbydup || []).push({
+            id: '2007513',
+            container: s,
+            size: '1000,90',
+            display: 'inlay-fix'
+    	});
+    })();
+    </script>-->
+  </body>
+</html>
+<!-- vim: set et sw=2 ts=2 sts=2 ff=unix fenc=utf8: -->
+
+
